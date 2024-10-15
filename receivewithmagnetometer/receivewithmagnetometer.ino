@@ -17,7 +17,7 @@ char buffer[50];
 #include <Wire.h>
 
 Adafruit_ICM20948 icm;
-uint16_t measurement_delay_us = 65535; // Delay between measurements for testing
+uint16_t measurement_delay_us = 100; // Delay between measurements for testing
 // For SPI mode, we need a CS pin
 #define ICM_CS 10
 // For software-SPI mode we need SCK/MOSI/MISO pins
@@ -40,6 +40,15 @@ void setup() {
   Serial.begin(115200);
  // while (!Serial) delay(1);
   delay(100);
+   if (!icm.begin_I2C()) {
+    // if (!icm.begin_SPI(ICM_CS)) {
+    // if (!icm.begin_SPI(ICM_CS, ICM_SCK, ICM_MISO, ICM_MOSI)) {
+
+    Serial.println("Failed to find ICM20948 chip");
+    while (1) {
+      delay(10);
+    }
+  }
 
   Serial.println("Feather LoRa RX Test!");
 
@@ -119,11 +128,14 @@ void loop() {
       //sprintf(buffer, "BAT:%sv F:%d H:%d P:%s", "hey", 1.11, 0.45, "yo");
       //sendLen = strlen(buffer);  //get the length of buffer
       int data_to_send = 12345;
-      double yy= mag.magnetic.y;
-      int yp=(int)yy;
+
+      //double yy= mag.magnetic.y;
+     // int yp=(int)yy;
+      //int tem=(int)temp.temperature;
 
 
-  sprintf(buffer, "%d",  yp);
+  sprintf(buffer, "temp:%s %.2f","hey", mag.magnetic.y);
+  Serial.println(mag.magnetic.y);
   sendLen = strlen(buffer);  //get the length of buffer
   Serial.print("Sending "); Serial.println(buffer);
 
