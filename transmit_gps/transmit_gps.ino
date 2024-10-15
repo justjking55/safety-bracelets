@@ -1,11 +1,15 @@
-//#include <SPI.h>
 #include <RH_RF95.h>
+#include <Adafruit_BNO08x.h>
 
 #if defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0)  // Feather M0 w/Radio
   #define RFM95_CS    8
   #define RFM95_INT   3
   #define RFM95_RST   4
 #endif
+
+Adafruit_BNO08x  bno08x(BNO08X_RESET);
+sh2_SensorValue_t sensorValue;
+char buffer[50];
 
 // Change to 434.0 or other frequency, must match RX's freq!
 #define RF95_FREQ 915.0
@@ -19,8 +23,21 @@ void setup() {
   digitalWrite(RFM95_RST, HIGH);
 
   Serial.begin(115200);
-  //while (!Serial) delay(1);
-  delay(100);
+  while (!Serial) delay(10);
+
+  Serial.println("Adafruit BNO08x test!");
+
+  // Try to initialize!
+  if (!bno08x.begin_I2C()) {
+  //if (!bno08x.begin_UART(&Serial1)) {  // Requires a device with > 300 byte UART buffer!
+  //if (!bno08x.begin_SPI(BNO08X_CS, BNO08X_INT)) {
+    Serial.println("Failed to find BNO08x chip");
+    while (1) { delay(10); }
+  }
+  Serial.println("BNO08x Found!");
+
+  setReports();
+  Serial.println("Reading events for BNO085");
 
   Serial.println("Feather LoRa TX Test!");
 
@@ -52,10 +69,36 @@ void setup() {
   rf95.setTxPower(23, false);
 }
 
+void setReports(void) {
+  Serial.println("Setting desired reports");
+  if (! bno08x.enableReport(SH2_ROTATION_VECTOR)) {
+    Serial.println("Could not enable rotation vector");
+  }
+}
+
 int16_t packetnum = 0;  // packet counter, we increment per xmission
 
 void loop() {
+  if (bno08x.wasReset()) {
+    Serial.print("sensor was reset ");
+    setReports();
+  }
+  
+  if (! bno08x.getSensorEvent(&sensorValue)) {
+    return;
+  }
+
+  float bno085_real = sensorValue.un.rotationVector.real;
+  float bno085_i = sensorValue.un.rotationVector.i;
+  float bno085_j = sensorValue.un.rotationVector.j;
+  float bno085_k = sensorValue.un.rotationVector.k;
+
+  sprintf(buffer, "r:%.2f, i:%.2f, j:%.2f, k:%.2f", bno085_real, bno085_i, bno085_j, bno085_k);
+
+  // TODO: Send the buffer
+
   delay(1000); // Wait 1 second between transmits, could also 'sleep' here!
+  
   Serial.println("Transmitting..."); // Send a message to rf95_server
 
   char radiopacket[20] = "Hello World #      ";
