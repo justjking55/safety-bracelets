@@ -7,8 +7,15 @@
   #define RFM95_RST   4
 #endif
 
+
+// For SPI mode, we also need a RESET 
+//#define BNO08X_RESET 5
+// but not for I2C or UART
+#define BNO08X_RESET -1
 Adafruit_BNO08x  bno08x(BNO08X_RESET);
 sh2_SensorValue_t sensorValue;
+
+char buffer[50];
 
 // Change to 434.0 or other frequency, must match RX's freq!
 #define RF95_FREQ 915.0
@@ -91,9 +98,12 @@ void loop() {
   float bno085_j = sensorValue.un.rotationVector.j;
   float bno085_k = sensorValue.un.rotationVector.k;
 
-  sprintf(buffer, "r:%.2f, i:%.2f, j:%.2f, k:%.2f", bno085_real, bno085_i, bno085_j, bno085_k);
+  char bno085_data[50];
+  sprintf(bno085_data, "r:%.2f, i:%.2f, j:%.2f, k:%.2f", bno085_real, bno085_i, bno085_j, bno085_k);
+  Serial.print("Quaternion from the BNO085 Rotation Vector: ");
+  Serial.println(bno085_data);
 
-  // TODO: Send the buffer
+  
 
   if (rf95.available()) {
     // Should be a message for us now
