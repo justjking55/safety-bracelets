@@ -120,7 +120,7 @@ void loop() {
       RH_RF95::printBuffer("Received: ", buf, len);
       Serial.print("Got: ");
       Serial.println((char*)buf);
-       Serial.print("RSSI: ");
+      Serial.print("RSSI: ");
       Serial.println(rf95.lastRssi(), DEC);
 
       // Send a reply
@@ -130,21 +130,21 @@ void loop() {
       int data_to_send = 12345;
 
       //double yy= mag.magnetic.y;
-     // int yp=(int)yy;
+      // int yp=(int)yy;
       //int tem=(int)temp.temperature;
 
 
-  sprintf(buffer, "temp:%s %.2f","hey", mag.magnetic.y);
-  Serial.println(mag.magnetic.y);
-  sendLen = strlen(buffer);  //get the length of buffer
-  Serial.print("Sending "); Serial.println(buffer);
+      sprintf(buffer, "temp:%s %.2f","hey", mag.magnetic.y);
+      Serial.println(mag.magnetic.y);
+      sendLen = strlen(buffer);  //get the length of buffer
+      Serial.print("Sending "); Serial.println(buffer);
 
       rf95.send((uint8_t *) buffer, sendLen); //finally pass the string (byte array) to the radio to send
 
 
       //uint8_t data[] = "And hello back to you";
       //rf95.send(data, sizeof(data));
-     // rf95.send(p, size);
+      // rf95.send(p, size);
       rf95.waitPacketSent();
       Serial.println("Sent a reply");
       digitalWrite(LED_BUILTIN, LOW);
