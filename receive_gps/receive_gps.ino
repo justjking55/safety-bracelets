@@ -1,5 +1,8 @@
 #include <RH_RF95.h>
 #include <Adafruit_BNO08x.h>
+#include <Adafruit_GPS.h>
+
+// LoRa //
 
 #if defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0)  // Feather M0 w/Radio
   #define RFM95_CS    8
@@ -7,6 +10,24 @@
   #define RFM95_RST   4
 #endif
 
+// Change to 434.0 or other frequency, must match RX's freq!
+#define RF95_FREQ 915.0
+
+// Singleton instance of the radio driver
+RH_RF95 rf95(RFM95_CS, RFM95_INT);
+
+
+// GPS //
+#define GPSSerial Serial1
+Adafruit_GPS GPS(&GPSSerial);
+// Set GPSECHO to 'false' to turn off echoing the GPS data to the Serial console
+// Set to 'true' if you want to debug and listen to the raw GPS sentences
+#define GPSECHO false
+
+uint32_t timer = millis();
+
+
+// BNO085 //
 
 // For SPI mode, we also need a RESET 
 //#define BNO08X_RESET 5
@@ -15,13 +36,9 @@
 Adafruit_BNO08x  bno08x(BNO08X_RESET);
 sh2_SensorValue_t sensorValue;
 
+
 char buffer[50];
 
-// Change to 434.0 or other frequency, must match RX's freq!
-#define RF95_FREQ 915.0
-
-// Singleton instance of the radio driver
-RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
@@ -73,6 +90,30 @@ void setup() {
   // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then
   // you can set transmitter powers from 5 to 23 dBm:
   rf95.setTxPower(23, false);
+
+
+  Serial.println("Adafruit GPS library basic parsing test!");
+  // 9600 NMEA is the default baud rate for Adafruit MTK GPS's- some use 4800
+  GPS.begin(9600);
+  // uncomment this line to turn on RMC (recommended minimum) and GGA (fix data) including altitude
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  // uncomment this line to turn on only the "minimum recommended" data
+  //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
+  // For parsing data, we don't suggest using anything but either RMC only or RMC+GGA since
+  // the parser doesn't care about other sentences at this time
+  // Set the update rate
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // 1 Hz update rate
+  // For the parsing code to work nicely and have time to sort thru the data, and
+  // print it out we don't suggest using anything higher than 1 Hz
+
+  // Request updates on antenna status, comment out to keep quiet
+  GPS.sendCommand(PGCMD_ANTENNA);
+
+  delay(1000);
+
+  // Ask for firmware version
+  GPSSerial.println(PMTK_Q_RELEASE);
+
 }
 
 void setReports(void) {
@@ -103,7 +144,34 @@ void loop() {
   Serial.print("Quaternion from the BNO085 Rotation Vector: ");
   Serial.println(bno085_data);
 
-  
+  // read data from the GPS in the 'main loop'
+  char c = GPS.read();
+  // if you want to debug, this is a good time to do it!
+  if (GPSECHO)
+    if (c) {
+      Serial.print("c: "); 
+      Serial.print(c);
+    }
+  // if a sentence is received, we can check the checksum, parse it...
+  if (GPS.newNMEAreceived()) {
+    // a tricky thing here is if we print the NMEA sentence, or data
+    // we end up not listening and catching other sentences!
+    // so be very wary if using OUTPUT_ALLDATA and trying to print out data
+    Serial.print("GPS.lastNMEA: ");
+    Serial.print(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
+    if (!GPS.parse(GPS.lastNMEA())) { // this also sets the newNMEAreceived() flag to false
+      Serial.println("NMEA sentence parse failed");
+      return; // we can fail to parse a sentence in which case we should just wait for another
+    }
+  }
+  if (GPS.fix) {
+    Serial.println("GPS satellite found!");
+    sprintf(buffer, "%.4f%c,%.4f%c", GPS.latitude, GPS.lat, GPS.longitude, GPS.lon);
+  } else {
+    Serial.println("GPS satellite not found!");
+    sprintf(buffer, "");
+  }
+  Serial.println(buffer);
 
   if (rf95.available()) {
     // Should be a message for us now
