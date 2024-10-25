@@ -1,6 +1,9 @@
 #include <RH_RF95.h>
 #include <Adafruit_BNO08x.h>
 #include <Adafruit_GPS.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
 // LoRa //
 
@@ -36,6 +39,14 @@ uint32_t timer = millis();
 Adafruit_BNO08x  bno08x(BNO08X_RESET);
 sh2_SensorValue_t sensorValue;
 
+
+// OLED Screen
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
+#define SCREEN_ADDRESS 0x3C
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 char buffer[50];
 
@@ -114,6 +125,16 @@ void setup() {
   // Ask for firmware version
   GPSSerial.println(PMTK_Q_RELEASE);
 
+
+  Serial.println("ELEGOO OLED Test!");
+  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println(("SSD1306 allocation failed"));
+    for(;;); // Don't proceed, loop forever
+  } else {
+    Serial.println("OLED Screen found!");
+  }
+  display.clearDisplay();
+
 }
 
 void setReports(void) {
@@ -141,8 +162,13 @@ void loop() {
 
   char bno085_data[50];
   sprintf(bno085_data, "r:%.2f, i:%.2f, j:%.2f, k:%.2f", bno085_real, bno085_i, bno085_j, bno085_k);
-  Serial.print("Quaternion from the BNO085 Rotation Vector: ");
-  Serial.println(bno085_data);
+  // Serial.print("Quaternion from the BNO085 Rotation Vector: ");
+  // Serial.println(bno085_data);
+
+  float absolute_angle_rad = atan2(2*(bno085_i*bno085_j+bno085_real*bno085_k),(pow(bno085_real, 2)+pow(bno085_i, 2)-pow(bno085_j, 2)-pow(bno085_k,2)));
+  // Serial.println(absolute_angle_rad);
+
+  float angle_offset = 0.9; // estimated from building angle--this is the value read when pointing at N
 
   // read data from the GPS in the 'main loop'
   char c = GPS.read();
@@ -153,6 +179,7 @@ void loop() {
       Serial.print(c);
     }
   // if a sentence is received, we can check the checksum, parse it...
+  /*
   if (GPS.newNMEAreceived()) {
     // a tricky thing here is if we print the NMEA sentence, or data
     // we end up not listening and catching other sentences!
@@ -164,14 +191,27 @@ void loop() {
       return; // we can fail to parse a sentence in which case we should just wait for another
     }
   }
+  */
   if (GPS.fix) {
-    Serial.println("GPS satellite found!");
-    sprintf(buffer, "%.4f%c,%.4f%c", GPS.latitude, GPS.lat, GPS.longitude, GPS.lon);
+    // Serial.println("GPS satellite found!");
+    float my_lat;
+    if(GPS.lat == 'N') {
+      my_lat = GPS.latitude;
+    } else {
+      my_lat = GPS.latitude * -1;
+    }
+    float my_lon;
+    if(GPS.lat == 'E') {
+      my_lon = GPS.longitude;
+    } else {
+      my_lon = GPS.longitude * -1;
+    }
+    sprintf(buffer, "%.4f,%.4f", my_lat, my_lon);
   } else {
-    Serial.println("GPS satellite not found!");
-    sprintf(buffer, "");
+    // Serial.println("GPS satellite not found!");
+    sprintf(buffer, "GPS satellite not found!");
   }
-  Serial.println(buffer);
+  // Serial.println(buffer);
 
   if (rf95.available()) {
     // Should be a message for us now
@@ -187,8 +227,8 @@ void loop() {
       Serial.println(rf95.lastRssi(), DEC);
 
       // Send a reply
-      uint8_t data[] = "And hello back to you";
-      rf95.send(data, sizeof(data));
+      // uint8_t data[] = "And hello back to you";
+      rf95.send((uint8_t *) buffer, sizeof(buffer));
       rf95.waitPacketSent();
       Serial.println("Sent a reply");
       digitalWrite(LED_BUILTIN, LOW);
@@ -196,4 +236,137 @@ void loop() {
       Serial.println("Receive failed");
     }
   }
+
+  // TODO: Calculate angle between GPS coordinates
+  float received_lat;
+  float received_lon;
+
+}
+
+void drawArrow_N() {
+  display.clearDisplay();
+  // fillTriangle(x1, y1, x2, y2, x3, y3, color)
+  display.fillTriangle(
+    display.width()/2  , display.height()/2-16,
+    display.width()/2-8, display.height()/2,
+    display.width()/2+8, display.height()/2, WHITE);
+  // fillRect(x, y, width, height, color)
+  display.fillRect(display.width()/2-3, display.height()/2, 7, 12, WHITE);
+  display.display();
+
+}
+
+void drawArrow_NE() {
+  display.clearDisplay();
+  // fillTriangle(x1, y1, x2, y2, x3, y3, color)
+  display.fillTriangle(
+    58, 26,
+    70, 38,
+    76, 20, WHITE);
+  display.fillTriangle(
+    62, 30,
+    66, 34,
+    53, 39, WHITE);
+  display.fillTriangle(
+    57, 43,
+    53, 39,
+    66, 34, WHITE);
+  display.display();
+
+}
+
+void drawArrow_E() {
+  display.clearDisplay();
+  // fillTriangle(x1, y1, x2, y2, x3, y3, color)
+  display.fillTriangle(
+    display.width()/2+16, display.height()/2,
+    display.width()/2, display.height()/2+8,
+    display.width()/2, display.height()/2-8, WHITE);
+  // fillRect(x, y, width, height, color)
+  display.fillRect(display.width()/2-12, display.height()/2-3, 12, 7, WHITE);
+  display.display();
+
+}
+
+void drawArrow_SE() {
+  display.clearDisplay();
+  // fillTriangle(x1, y1, x2, y2, x3, y3, color)
+  display.fillTriangle(
+    58, 38,
+    70, 26,
+    76, 44, WHITE);
+  display.fillTriangle(
+    53, 25,
+    57, 21,
+    62, 34, WHITE);
+  display.fillTriangle(
+    62, 34,
+    66, 30,
+    57, 21, WHITE);
+  display.display();
+
+}
+
+void drawArrow_S() {
+  display.clearDisplay();
+  // fillTriangle(x1, y1, x2, y2, x3, y3, color)
+  display.fillTriangle(
+    display.width()/2  , display.height()/2+16,
+    display.width()/2-8, display.height()/2,
+    display.width()/2+8, display.height()/2, WHITE);
+  // fillRect(x, y, width, height, color)
+  display.fillRect(display.width()/2-3, display.height()/2-12, 7, 12, WHITE);
+  display.display();
+
+}
+
+void drawArrow_SW() {
+  display.clearDisplay();
+  // fillTriangle(x1, y1, x2, y2, x3, y3, color)
+  display.fillTriangle(
+    58, 26,
+    70, 38,
+    52, 44, WHITE);
+  display.fillTriangle(
+    71, 21,
+    75, 25,
+    66, 34, WHITE);
+  display.fillTriangle(
+    62, 30,
+    66, 34,
+    71, 21, WHITE);
+  display.display();
+
+}
+
+void drawArrow_W() {
+  display.clearDisplay();
+  // fillTriangle(x1, y1, x2, y2, x3, y3, color)
+  display.fillTriangle(
+    display.width()/2-16, display.height()/2,
+    display.width()/2, display.height()/2+8,
+    display.width()/2, display.height()/2-8, WHITE);
+  // fillRect(x, y, width, height, color)
+  display.fillRect(display.width()/2, display.height()/2-3, 12, 7, WHITE);
+  display.display();
+
+}
+
+void drawArrow_NW() {
+  display.clearDisplay();
+  // fillTriangle(x1, y1, x2, y2, x3, y3, color)
+  display.fillTriangle(
+    52, 20,
+    58, 38,
+    70, 26, WHITE);
+  display.fillTriangle(
+    62, 34,
+    66, 30,
+    71, 43, WHITE);
+  display.fillTriangle(
+    71, 43,
+    75, 39,
+    66, 30, WHITE);
+  display.display();
+
 }
