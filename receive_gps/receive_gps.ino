@@ -55,7 +55,7 @@ sh2_SensorValue_t sensorValue;
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 char buffer[50];
-
+double pi = 3.14159265;
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
@@ -171,7 +171,7 @@ void loop() {
   // Serial.println(bno085_data);
 
   float absolute_angle_rad = atan2(2*(bno085_i*bno085_j+bno085_real*bno085_k),(pow(bno085_real, 2)+pow(bno085_i, 2)-pow(bno085_j, 2)-pow(bno085_k,2)));
-  // Serial.println(absolute_angle_rad);
+  Serial.println(absolute_angle_rad);
 
   float angle_offset = 0.9; // estimated from building angle--this is the value read when pointing at N
 
@@ -241,7 +241,52 @@ void loop() {
   double received_lon = arr[1];
 
   float bearing = atan2(cos(my_lat)*sin(received_lat)-sin(my_lat)*cos(received_lat)*cos(received_lon-my_lon), sin(received_lon-my_lon)*cos(received_lat));
-  Serial.println(bearing);
+  // Serial.println(bearing);
+
+  float arrow_angle = (-1*bearing) - angle_offset + absolute_angle_rad;
+  Serial.println(arrow_angle);
+  Serial.println((pi/8));
+  char dir[3];
+  char prev_dir[3];
+  if (arrow_angle <= (pi/8) && arrow_angle >= -(pi/8)) 
+    sprintf(dir, "N-");
+  else if (arrow_angle <= (pi/4)+(pi/8) && arrow_angle >= (pi/4)-(pi/8))
+    sprintf(dir, "NE");
+  else if (arrow_angle <= (pi/2)+(pi/8) && arrow_angle >= (pi/2)-(pi/8))
+    sprintf(dir, "E-");
+  else if (arrow_angle <= -pi-(pi/8) && arrow_angle >= (pi/2)+(pi/8))
+    sprintf(dir, "SE");
+  else if (arrow_angle <= -pi+(pi/8) && arrow_angle >= -pi-(pi/8))
+    sprintf(dir, "S-");
+  else if (arrow_angle <= -(pi*3/4)+(pi/8) && arrow_angle >= -pi+(pi/8))
+    sprintf(dir, "SW");
+  else if (arrow_angle <= -(pi/2)+(pi/8) && arrow_angle >= -(pi/2)-(pi/8))
+    sprintf(dir, "W-");
+  else if (arrow_angle <= -(pi/4)+(pi/8) && arrow_angle >= -(pi/4)-(pi/8))
+    sprintf(dir, "NW");
+
+  Serial.println(dir);
+  // Serial.println(prev_dir);
+  
+  //if (prev_dir != dir) {
+    sprintf(prev_dir, dir);
+    if (prev_dir[0] == 'N' && prev_dir[1] == '-')
+      drawArrow_N();
+    else if (prev_dir[0] == 'N' && prev_dir[1] == 'E')
+      drawArrow_NE();
+    else if (prev_dir[0] == 'E' && prev_dir[1] == '-')
+      drawArrow_E();
+    else if (prev_dir[0] == 'S' && prev_dir[1] == 'E')
+      drawArrow_SE();
+    else if (prev_dir[0] == 'S' && prev_dir[1] == '-')
+      drawArrow_S();
+    else if (prev_dir[0] == 'S' && prev_dir[1] == 'W')
+      drawArrow_SW();
+    else if (prev_dir[0] == 'W' && prev_dir[1] == '-')
+      drawArrow_W();
+    else if (prev_dir[0] == 'N' && prev_dir[1] == 'W')
+      drawArrow_NW();
+  //}
 }
 
 void parse_gps(uint8_t* buf, double* arr) {
