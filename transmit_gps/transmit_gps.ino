@@ -70,8 +70,8 @@ void setup() {
 
   // Try to initialize!
   if (!bno08x.begin_I2C()) {
-  //if (!bno08x.begin_UART(&Serial1)) {  // Requires a device with > 300 byte UART buffer!
-  //if (!bno08x.begin_SPI(BNO08X_CS, BNO08X_INT)) {
+  // if (!bno08x.begin_UART(&Serial1)) {  // Requires a device with > 300 byte UART buffer!
+  // if (!bno08x.begin_SPI(BNO08X_CS, BNO08X_INT)) {
     Serial.println("Failed to find BNO08x chip");
     while (1) { delay(10); }
   }
@@ -254,8 +254,69 @@ void loop() {
   double received_lon = arr[1];
 
   float bearing = atan2(cos(my_lat)*sin(received_lat)-sin(my_lat)*cos(received_lat)*cos(received_lon-my_lon), sin(received_lon-my_lon)*cos(received_lat));
-  Serial.println(bearing);
+  // Serial.println(bearing);
 
+  float arrow_angle = bearing - angle_offset + absolute_angle_rad;
+  
+  char dir[3];
+  char prev_dir[3];
+  if (arrow_angle <= start) 
+    sprintf(dir, "NW");
+  else if (arrow_angle <= start + (1*(pi/4)))
+    sprintf(dir, "N-");
+  else if (arrow_angle <= start + (2*(pi/4)))
+    sprintf(dir, "NE");
+  else if (arrow_angle <= start + (3*(pi/4)))
+    sprintf(dir, "E-");
+  else if (arrow_angle <= start + (4*(pi/4)))
+    sprintf(dir, "SE");
+  else if (arrow_angle <= start + (5*(pi/4)))
+    sprintf(dir, "S-");
+  else if (arrow_angle <= start + (6*(pi/4)))
+    sprintf(dir, "SW");
+  else if (arrow_angle <= start + (7*(pi/4)))
+    sprintf(dir, "W-");
+  else if (arrow_angle <= start + (8*(pi/4)))
+    sprintf(dir, "NW");
+  else if (arrow_angle <= start + (9*(pi/4)))
+    sprintf(dir, "N-");
+  else if (arrow_angle <= start + (10*(pi/4)))
+    sprintf(dir, "NE");
+  else if (arrow_angle <= start + (11*(pi/4)))
+    sprintf(dir, "E-");
+  else if (arrow_angle <= start + (12*(pi/4)))
+    sprintf(dir, "SE");
+  else if (arrow_angle <= start + (13*(pi/4)))
+    sprintf(dir, "S-");
+  else if (arrow_angle <= start + (14*(pi/4)))
+    sprintf(dir, "SW");
+  else if (arrow_angle <= start + (15*(pi/4)))
+    sprintf(dir, "W-");
+  else if (arrow_angle <= start + (16*(pi/4)))
+    sprintf(dir, "NW");
+
+  Serial.println(dir);
+  // Serial.println(prev_dir);
+  
+  //if (prev_dir != dir) {
+    sprintf(prev_dir, dir);
+    if (prev_dir[0] == 'N' && prev_dir[1] == '-')
+      drawArrow_N();
+    else if (prev_dir[0] == 'N' && prev_dir[1] == 'E')
+      drawArrow_NE();
+    else if (prev_dir[0] == 'E' && prev_dir[1] == '-')
+      drawArrow_E();
+    else if (prev_dir[0] == 'S' && prev_dir[1] == 'E')
+      drawArrow_SE();
+    else if (prev_dir[0] == 'S' && prev_dir[1] == '-')
+      drawArrow_S();
+    else if (prev_dir[0] == 'S' && prev_dir[1] == 'W')
+      drawArrow_SW();
+    else if (prev_dir[0] == 'W' && prev_dir[1] == '-')
+      drawArrow_W();
+    else if (prev_dir[0] == 'N' && prev_dir[1] == 'W')
+      drawArrow_NW();
+  //}
 }
 
 void parse_gps(uint8_t* buf, double* arr) {
