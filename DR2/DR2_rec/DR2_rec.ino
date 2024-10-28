@@ -174,7 +174,7 @@ void loop() {
   // Serial.println(bno085_data);
 
   float absolute_angle_rad = atan2(2*(bno085_i*bno085_j+bno085_real*bno085_k),(pow(bno085_real, 2)+pow(bno085_i, 2)-pow(bno085_j, 2)-pow(bno085_k,2)));
-  Serial.println(absolute_angle_rad);
+  // Serial.println(absolute_angle_rad);
 
   float angle_offset = 0.9; // estimated from building angle--this is the value read when pointing at N
 
@@ -256,8 +256,8 @@ void loop() {
   // Serial.println(bearing);
 
   float arrow_angle =  absolute_angle_rad - angle_offset - bearing;
-  Serial.println(arrow_angle);
-  Serial.println((pi/8));
+  // Serial.println(arrow_angle);
+  // Serial.println((pi/8));
   char dir[3];
   char prev_dir[3];
   float start = (-1 * 2 * pi) - (pi/8);

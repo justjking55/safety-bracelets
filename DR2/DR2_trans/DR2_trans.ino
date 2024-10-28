@@ -266,25 +266,45 @@ void loop() {
   float bearing = atan2(cos(my_lat)*sin(received_lat)-sin(my_lat)*cos(received_lat)*cos(received_lon-my_lon), sin(received_lon-my_lon)*cos(received_lat));
   // Serial.println(bearing);
 
-  float arrow_angle = absolute_angle_rad - angle_offset - bearing;
-
+  float arrow_angle =  absolute_angle_rad - angle_offset - bearing;
+  // Serial.println(arrow_angle);
+  // Serial.println((pi/8));
   char dir[3];
   char prev_dir[3];
-  if (arrow_angle <= (pi/8) && arrow_angle >= -(pi/8)) 
+  float start = (-1 * 2 * pi) - (pi/8);
+  if (arrow_angle <= start) 
+    sprintf(dir, "NW");
+  else if (arrow_angle <= start + (1*(pi/4)))
     sprintf(dir, "N-");
-  else if (arrow_angle <= (pi/4)+(pi/8) && arrow_angle >= (pi/4)-(pi/8))
+  else if (arrow_angle <= start + (2*(pi/4)))
     sprintf(dir, "NE");
-  else if (arrow_angle <= (pi/2)+(pi/8) && arrow_angle >= (pi/2)-(pi/8))
+  else if (arrow_angle <= start + (3*(pi/4)))
     sprintf(dir, "E-");
-  else if (arrow_angle <= -pi-(pi/8) && arrow_angle >= (pi/2)+(pi/8))
+  else if (arrow_angle <= start + (4*(pi/4)))
     sprintf(dir, "SE");
-  else if (arrow_angle <= -pi+(pi/8) && arrow_angle >= -pi-(pi/8))
+  else if (arrow_angle <= start + (5*(pi/4)))
     sprintf(dir, "S-");
-  else if (arrow_angle <= -(pi*3/4)+(pi/8) && arrow_angle >= -pi+(pi/8))
+  else if (arrow_angle <= start + (6*(pi/4)))
     sprintf(dir, "SW");
-  else if (arrow_angle <= -(pi/2)+(pi/8) && arrow_angle >= -(pi/2)-(pi/8))
+  else if (arrow_angle <= start + (7*(pi/4)))
     sprintf(dir, "W-");
-  else if (arrow_angle <= -(pi/4)+(pi/8) && arrow_angle >= -(pi/4)-(pi/8))
+  else if (arrow_angle <= start + (8*(pi/4)))
+    sprintf(dir, "NW");
+  else if (arrow_angle <= start + (9*(pi/4)))
+    sprintf(dir, "N-");
+  else if (arrow_angle <= start + (10*(pi/4)))
+    sprintf(dir, "NE");
+  else if (arrow_angle <= start + (11*(pi/4)))
+    sprintf(dir, "E-");
+  else if (arrow_angle <= start + (12*(pi/4)))
+    sprintf(dir, "SE");
+  else if (arrow_angle <= start + (13*(pi/4)))
+    sprintf(dir, "S-");
+  else if (arrow_angle <= start + (14*(pi/4)))
+    sprintf(dir, "SW");
+  else if (arrow_angle <= start + (15*(pi/4)))
+    sprintf(dir, "W-");
+  else if (arrow_angle <= start + (16*(pi/4)))
     sprintf(dir, "NW");
 
   Serial.println(dir);
