@@ -171,7 +171,7 @@ void loop() {
   // Serial.println(bno085_data);
 
   float absolute_angle_rad = atan2(2*(bno085_i*bno085_j+bno085_real*bno085_k),(pow(bno085_real, 2)+pow(bno085_i, 2)-pow(bno085_j, 2)-pow(bno085_k,2)));
-  Serial.println(absolute_angle_rad);
+  // Serial.println(absolute_angle_rad);
 
   float angle_offset = 0.9; // estimated from building angle--this is the value read when pointing at N
 
@@ -241,10 +241,14 @@ void loop() {
   double received_lon = arr[1];
 
   float bearing = atan2(cos(my_lat)*sin(received_lat)-sin(my_lat)*cos(received_lat)*cos(received_lon-my_lon), sin(received_lon-my_lon)*cos(received_lat));
+  float distance = getDistanceFromLatLonInKm(my_lat, my_lon, received_lat, received_lon);
   // Serial.println(bearing);
 
   float arrow_angle = (-1*bearing) - angle_offset + absolute_angle_rad;
+  display.clearDisplay();
   drawArrow(arrow_angle);
+  drawDistanceWarning(distance);
+  display.display();
 
 }
 
@@ -267,6 +271,20 @@ void parse_gps(uint8_t* buf, double* arr) {
 
 }
 
+float getDistanceFromLatLonInKm(float lat1,float lon1,float lat2,float lon2) {
+  float R = 6371; // Radius of the earth in km
+  float dLat = deg2rad(lat2-lat1);  // deg2rad below
+  float dLon = deg2rad(lon2-lon1); 
+  float a = sin(dLat/2) * sin(dLat/2) + cos(deg2rad(lat1)) * cos(deg2rad(lat2)) * sin(dLon/2) * sin(dLon/2); 
+  float c = 2 * atan2(sqrt(a), sqrt(1-a)); 
+  float d = R * c; // Distance in km
+  return d;
+}
+
+float deg2rad(float deg) {
+  return deg * (pi/180);
+}
+
 void drawArrow(float angle) {
   int point_a_x = rotate_x(0, 16, angle);
   int point_a_y = rotate_y(0, 16, angle);
@@ -283,11 +301,9 @@ void drawArrow(float angle) {
   int base_d_x = rotate_x(3, -12, angle);
   int base_d_y =  rotate_y(3, -12, angle);
 
-  display.clearDisplay();
   display.fillTriangle(64+point_a_x, 32-point_a_y, 64+point_b_x, 32-point_b_y, 64+point_c_x, 32-point_c_y, WHITE);
   display.fillTriangle(64+base_a_x, 32-base_a_y, 64+base_b_x, 32-base_b_y, 64+base_c_x, 32-base_c_y, WHITE);
   display.fillTriangle(64+base_d_x, 32-base_d_y, 64+base_b_x, 32-base_b_y, 64+base_c_x, 32-base_c_y, WHITE);
-  display.display();
 }
 
 int rotate_x(float x, float y, float angle) {

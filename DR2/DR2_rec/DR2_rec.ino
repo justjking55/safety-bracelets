@@ -256,6 +256,9 @@ void loop() {
   // Serial.println(bearing);
 
   float arrow_angle =  absolute_angle_rad - angle_offset - bearing;
+  float distance = getDistanceFromLatLonInKm(my_lat, my_lon, received_lat, received_lon);
+  Serial.println("Distance should be 0.03157km");
+  Serial.println(distance);
   drawArrow(arrow_angle);
 }
 
@@ -278,6 +281,19 @@ void parse_gps(uint8_t* buf, double* arr) {
 
 }
 
+float getDistanceFromLatLonInKm(float lat1,float lon1,float lat2,float lon2) {
+  float R = 6371; // Radius of the earth in km
+  float dLat = deg2rad(lat2-lat1);  // deg2rad below
+  float dLon = deg2rad(lon2-lon1); 
+  float a = sin(dLat/2) * sin(dLat/2) + cos(deg2rad(lat1)) * cos(deg2rad(lat2)) * sin(dLon/2) * sin(dLon/2); 
+  float c = 2 * atan2(sqrt(a), sqrt(1-a)); 
+  float d = R * c; // Distance in km
+  return d;
+}
+
+float deg2rad(float deg) {
+  return deg * (pi/180);
+}
 
 void drawArrow(float angle) {
   int point_a_x = rotate_x(0, 16, angle);
