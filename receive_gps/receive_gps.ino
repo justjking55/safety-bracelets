@@ -63,7 +63,7 @@ void setup() {
   digitalWrite(RFM95_RST, HIGH);
 
   Serial.begin(115200);
-  while (!Serial) delay(10);
+  // while (!Serial) delay(10);
   
   Serial.println("Adafruit BNO08x test!");
 
@@ -244,67 +244,8 @@ void loop() {
   // Serial.println(bearing);
 
   float arrow_angle = (-1*bearing) - angle_offset + absolute_angle_rad;
-  Serial.println(arrow_angle);
-  Serial.println((pi/8));
-  char dir[3];
-  char prev_dir[3];
-  if (arrow_angle <= start) 
-    sprintf(dir, "NW");
-  else if (arrow_angle <= start + (1*(pi/4)))
-    sprintf(dir, "N-");
-  else if (arrow_angle <= start + (2*(pi/4)))
-    sprintf(dir, "NE");
-  else if (arrow_angle <= start + (3*(pi/4)))
-    sprintf(dir, "E-");
-  else if (arrow_angle <= start + (4*(pi/4)))
-    sprintf(dir, "SE");
-  else if (arrow_angle <= start + (5*(pi/4)))
-    sprintf(dir, "S-");
-  else if (arrow_angle <= start + (6*(pi/4)))
-    sprintf(dir, "SW");
-  else if (arrow_angle <= start + (7*(pi/4)))
-    sprintf(dir, "W-");
-  else if (arrow_angle <= start + (8*(pi/4)))
-    sprintf(dir, "NW");
-  else if (arrow_angle <= start + (9*(pi/4)))
-    sprintf(dir, "N-");
-  else if (arrow_angle <= start + (10*(pi/4)))
-    sprintf(dir, "NE");
-  else if (arrow_angle <= start + (11*(pi/4)))
-    sprintf(dir, "E-");
-  else if (arrow_angle <= start + (12*(pi/4)))
-    sprintf(dir, "SE");
-  else if (arrow_angle <= start + (13*(pi/4)))
-    sprintf(dir, "S-");
-  else if (arrow_angle <= start + (14*(pi/4)))
-    sprintf(dir, "SW");
-  else if (arrow_angle <= start + (15*(pi/4)))
-    sprintf(dir, "W-");
-  else if (arrow_angle <= start + (16*(pi/4)))
-    sprintf(dir, "NW");
+  drawArrow(arrow_angle);
 
-  Serial.println(dir);
-  // Serial.println(prev_dir);
-  
-  //if (prev_dir != dir) {
-    sprintf(prev_dir, dir);
-    if (prev_dir[0] == 'N' && prev_dir[1] == '-')
-      drawArrow_N();
-    else if (prev_dir[0] == 'N' && prev_dir[1] == 'E')
-      drawArrow_NE();
-    else if (prev_dir[0] == 'E' && prev_dir[1] == '-')
-      drawArrow_E();
-    else if (prev_dir[0] == 'S' && prev_dir[1] == 'E')
-      drawArrow_SE();
-    else if (prev_dir[0] == 'S' && prev_dir[1] == '-')
-      drawArrow_S();
-    else if (prev_dir[0] == 'S' && prev_dir[1] == 'W')
-      drawArrow_SW();
-    else if (prev_dir[0] == 'W' && prev_dir[1] == '-')
-      drawArrow_W();
-    else if (prev_dir[0] == 'N' && prev_dir[1] == 'W')
-      drawArrow_NW();
-  //}
 }
 
 void parse_gps(uint8_t* buf, double* arr) {
@@ -326,130 +267,32 @@ void parse_gps(uint8_t* buf, double* arr) {
 
 }
 
-void drawArrow_N() {
-  display.clearDisplay();
-  // fillTriangle(x1, y1, x2, y2, x3, y3, color)
-  display.fillTriangle(
-    display.width()/2  , display.height()/2-16,
-    display.width()/2-8, display.height()/2,
-    display.width()/2+8, display.height()/2, WHITE);
-  // fillRect(x, y, width, height, color)
-  display.fillRect(display.width()/2-3, display.height()/2, 7, 12, WHITE);
-  display.display();
+void drawArrow(float angle) {
+  int point_a_x = rotate_x(0, 16, angle);
+  int point_a_y = rotate_y(0, 16, angle);
+  int point_b_x = rotate_x(-8, 0, angle);
+  int point_b_y = rotate_y(-8, 0, angle);
+  int point_c_x = rotate_x(8, 0, angle);
+  int point_c_y = rotate_y(8, 0, angle);
+  int base_a_x = rotate_x(-3, 0, angle);
+  int base_a_y = rotate_y(-3, 0, angle);
+  int base_b_x = rotate_x(3, 0, angle);
+  int base_b_y = rotate_y(3, 0, angle);
+  int base_c_x = rotate_x(-3, -12, angle);
+  int base_c_y = rotate_y(-3, -12, angle);
+  int base_d_x = rotate_x(3, -12, angle);
+  int base_d_y =  rotate_y(3, -12, angle);
 
+  display.clearDisplay();
+  display.fillTriangle(64+point_a_x, 32-point_a_y, 64+point_b_x, 32-point_b_y, 64+point_c_x, 32-point_c_y, WHITE);
+  display.fillTriangle(64+base_a_x, 32-base_a_y, 64+base_b_x, 32-base_b_y, 64+base_c_x, 32-base_c_y, WHITE);
+  display.fillTriangle(64+base_d_x, 32-base_d_y, 64+base_b_x, 32-base_b_y, 64+base_c_x, 32-base_c_y, WHITE);
+  display.display();
 }
 
-void drawArrow_NE() {
-  display.clearDisplay();
-  // fillTriangle(x1, y1, x2, y2, x3, y3, color)
-  display.fillTriangle(
-    58, 26,
-    70, 38,
-    76, 20, WHITE);
-  display.fillTriangle(
-    62, 30,
-    66, 34,
-    53, 39, WHITE);
-  display.fillTriangle(
-    57, 43,
-    53, 39,
-    66, 34, WHITE);
-  display.display();
-
+int rotate_x(float x, float y, float angle) {
+  return (int) x*cos(angle)-y*sin(angle);
 }
-
-void drawArrow_E() {
-  display.clearDisplay();
-  // fillTriangle(x1, y1, x2, y2, x3, y3, color)
-  display.fillTriangle(
-    display.width()/2+16, display.height()/2,
-    display.width()/2, display.height()/2+8,
-    display.width()/2, display.height()/2-8, WHITE);
-  // fillRect(x, y, width, height, color)
-  display.fillRect(display.width()/2-12, display.height()/2-3, 12, 7, WHITE);
-  display.display();
-
-}
-
-void drawArrow_SE() {
-  display.clearDisplay();
-  // fillTriangle(x1, y1, x2, y2, x3, y3, color)
-  display.fillTriangle(
-    58, 38,
-    70, 26,
-    76, 44, WHITE);
-  display.fillTriangle(
-    53, 25,
-    57, 21,
-    62, 34, WHITE);
-  display.fillTriangle(
-    62, 34,
-    66, 30,
-    57, 21, WHITE);
-  display.display();
-
-}
-
-void drawArrow_S() {
-  display.clearDisplay();
-  // fillTriangle(x1, y1, x2, y2, x3, y3, color)
-  display.fillTriangle(
-    display.width()/2  , display.height()/2+16,
-    display.width()/2-8, display.height()/2,
-    display.width()/2+8, display.height()/2, WHITE);
-  // fillRect(x, y, width, height, color)
-  display.fillRect(display.width()/2-3, display.height()/2-12, 7, 12, WHITE);
-  display.display();
-
-}
-
-void drawArrow_SW() {
-  display.clearDisplay();
-  // fillTriangle(x1, y1, x2, y2, x3, y3, color)
-  display.fillTriangle(
-    58, 26,
-    70, 38,
-    52, 44, WHITE);
-  display.fillTriangle(
-    71, 21,
-    75, 25,
-    66, 34, WHITE);
-  display.fillTriangle(
-    62, 30,
-    66, 34,
-    71, 21, WHITE);
-  display.display();
-
-}
-
-void drawArrow_W() {
-  display.clearDisplay();
-  // fillTriangle(x1, y1, x2, y2, x3, y3, color)
-  display.fillTriangle(
-    display.width()/2-16, display.height()/2,
-    display.width()/2, display.height()/2+8,
-    display.width()/2, display.height()/2-8, WHITE);
-  // fillRect(x, y, width, height, color)
-  display.fillRect(display.width()/2, display.height()/2-3, 12, 7, WHITE);
-  display.display();
-
-}
-
-void drawArrow_NW() {
-  display.clearDisplay();
-  // fillTriangle(x1, y1, x2, y2, x3, y3, color)
-  display.fillTriangle(
-    52, 20,
-    58, 38,
-    70, 26, WHITE);
-  display.fillTriangle(
-    62, 34,
-    66, 30,
-    71, 43, WHITE);
-  display.fillTriangle(
-    71, 43,
-    75, 39,
-    66, 30, WHITE);
-  display.display();
-
+int rotate_y(float x, float y, float angle) {
+  return (int) x*sin(angle)+y*cos(angle);
 }

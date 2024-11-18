@@ -63,7 +63,7 @@ void setup() {
   digitalWrite(RFM95_RST, HIGH);
 
   Serial.begin(115200);
-  while (!Serial) delay(10);
+  // while (!Serial) delay(10);
   
   Serial.println("Adafruit BNO08x test!");
 
@@ -256,68 +256,7 @@ void loop() {
   // Serial.println(bearing);
 
   float arrow_angle =  absolute_angle_rad - angle_offset - bearing;
-  // Serial.println(arrow_angle);
-  // Serial.println((pi/8));
-  char dir[3];
-  char prev_dir[3];
-  float start = (-1 * 2 * pi) - (pi/8);
-  if (arrow_angle <= start) 
-    sprintf(dir, "NW");
-  else if (arrow_angle <= start + (1*(pi/4)))
-    sprintf(dir, "N-");
-  else if (arrow_angle <= start + (2*(pi/4)))
-    sprintf(dir, "NE");
-  else if (arrow_angle <= start + (3*(pi/4)))
-    sprintf(dir, "E-");
-  else if (arrow_angle <= start + (4*(pi/4)))
-    sprintf(dir, "SE");
-  else if (arrow_angle <= start + (5*(pi/4)))
-    sprintf(dir, "S-");
-  else if (arrow_angle <= start + (6*(pi/4)))
-    sprintf(dir, "SW");
-  else if (arrow_angle <= start + (7*(pi/4)))
-    sprintf(dir, "W-");
-  else if (arrow_angle <= start + (8*(pi/4)))
-    sprintf(dir, "NW");
-  else if (arrow_angle <= start + (9*(pi/4)))
-    sprintf(dir, "N-");
-  else if (arrow_angle <= start + (10*(pi/4)))
-    sprintf(dir, "NE");
-  else if (arrow_angle <= start + (11*(pi/4)))
-    sprintf(dir, "E-");
-  else if (arrow_angle <= start + (12*(pi/4)))
-    sprintf(dir, "SE");
-  else if (arrow_angle <= start + (13*(pi/4)))
-    sprintf(dir, "S-");
-  else if (arrow_angle <= start + (14*(pi/4)))
-    sprintf(dir, "SW");
-  else if (arrow_angle <= start + (15*(pi/4)))
-    sprintf(dir, "W-");
-  else if (arrow_angle <= start + (16*(pi/4)))
-    sprintf(dir, "NW");
-
-  Serial.println(dir);
-  // Serial.println(prev_dir);
-  
-  //if (prev_dir != dir) {
-    sprintf(prev_dir, dir);
-    if (prev_dir[0] == 'N' && prev_dir[1] == '-')
-      drawArrow_N();
-    else if (prev_dir[0] == 'N' && prev_dir[1] == 'E')
-      drawArrow_NE();
-    else if (prev_dir[0] == 'E' && prev_dir[1] == '-')
-      drawArrow_E();
-    else if (prev_dir[0] == 'S' && prev_dir[1] == 'E')
-      drawArrow_SE();
-    else if (prev_dir[0] == 'S' && prev_dir[1] == '-')
-      drawArrow_S();
-    else if (prev_dir[0] == 'S' && prev_dir[1] == 'W')
-      drawArrow_SW();
-    else if (prev_dir[0] == 'W' && prev_dir[1] == '-')
-      drawArrow_W();
-    else if (prev_dir[0] == 'N' && prev_dir[1] == 'W')
-      drawArrow_NW();
-  //}
+  drawArrow(arrow_angle);
 }
 
 void parse_gps(uint8_t* buf, double* arr) {
@@ -338,6 +277,38 @@ void parse_gps(uint8_t* buf, double* arr) {
   arr[1] = lon;
 
 }
+
+
+void drawArrow(float angle) {
+  int point_a_x = rotate_x(0, 16, angle);
+  int point_a_y = rotate_y(0, 16, angle);
+  int point_b_x = rotate_x(-8, 0, angle);
+  int point_b_y = rotate_y(-8, 0, angle);
+  int point_c_x = rotate_x(8, 0, angle);
+  int point_c_y = rotate_y(8, 0, angle);
+  int base_a_x = rotate_x(-3, 0, angle);
+  int base_a_y = rotate_y(-3, 0, angle);
+  int base_b_x = rotate_x(3, 0, angle);
+  int base_b_y = rotate_y(3, 0, angle);
+  int base_c_x = rotate_x(-3, -12, angle);
+  int base_c_y = rotate_y(-3, -12, angle);
+  int base_d_x = rotate_x(3, -12, angle);
+  int base_d_y =  rotate_y(3, -12, angle);
+
+  display.clearDisplay();
+  display.fillTriangle(64+point_a_x, 32-point_a_y, 64+point_b_x, 32-point_b_y, 64+point_c_x, 32-point_c_y, WHITE);
+  display.fillTriangle(64+base_a_x, 32-base_a_y, 64+base_b_x, 32-base_b_y, 64+base_c_x, 32-base_c_y, WHITE);
+  display.fillTriangle(64+base_d_x, 32-base_d_y, 64+base_b_x, 32-base_b_y, 64+base_c_x, 32-base_c_y, WHITE);
+  display.display();
+}
+
+int rotate_x(float x, float y, float angle) {
+  return (int) x*cos(angle)-y*sin(angle);
+}
+int rotate_y(float x, float y, float angle) {
+  return (int) x*sin(angle)+y*cos(angle);
+}
+
 
 void drawArrow_N() {
   display.clearDisplay();
