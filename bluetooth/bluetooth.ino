@@ -12,8 +12,7 @@
  any redistribution
 *********************************************************************/
 #include <bluefruit.h>
-#include <Adafruit_LittleFS.h>
-#include <InternalFileSystem.h>
+
 
 // BLE Service
 BLEDfu  bledfu;  // OTA DFU service
