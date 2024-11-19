@@ -68,7 +68,8 @@ void setup()
   startAdv();
 
   Serial.println("Please use Adafruit's Bluefruit LE app to connect in UART mode");
-  Serial.println("Once connected, enter character(s) that you wish to send");
+
+  
 }
 
 void startAdv(void)
@@ -105,9 +106,21 @@ void loop()
   // Delay to wait for enough input, since we have a limited transmission buffer
   delay(2);
 
-  uint8_t buf[64] = "Test!";
-  int count = sizeof(buf);
-  bleuart.write( buf, count );
+  uint8_t buf1[20] = "1:36.001641";
+  int count = sizeof(buf1);
+  bleuart.write( buf1, count );
+  uint8_t buf2[20] = "2:-78.939723";
+  count = sizeof(buf2);
+  bleuart.write( buf2, count );
+  uint8_t buf3[20] = "3:36.000617";
+  count = sizeof(buf3);
+  bleuart.write( buf3, count );
+  uint8_t buf4[20] = "4:-78.937486";
+  count = sizeof(buf4);
+  bleuart.write( buf4, count );
+  uint8_t buf5[20] = "5:0.2312";
+  count = sizeof(buf5);
+  bleuart.write( buf5, count );
 
   // Forward from BLEUART to HW Serial
   while ( bleuart.available() )
@@ -129,6 +142,10 @@ void connect_callback(uint16_t conn_handle)
 
   Serial.print("Connected to ");
   Serial.println(central_name);
+
+  uint8_t buf[64] = "36.001681,-78.939713;36.000617,-78.937486;0.2312";
+  int count = sizeof(buf);
+  bleuart.write( buf, count );
 }
 
 /**
