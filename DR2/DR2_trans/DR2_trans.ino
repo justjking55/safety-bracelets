@@ -64,7 +64,7 @@ void setup() {
   digitalWrite(RFM95_RST, HIGH);
 
   Serial.begin(115200);
-  while (!Serial) delay(10);
+  // while (!Serial) delay(10);
 
   Serial.println("Adafruit BNO08x test!");
 
